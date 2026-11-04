@@ -1,29 +1,71 @@
 #include "PluginEditor.h"
-#include "PluginProcessor.h"
 
 TheonBeatDynamicsAudioProcessorEditor::TheonBeatDynamicsAudioProcessorEditor (TheonBeatDynamicsAudioProcessor& p)
-    : AudioProcessorEditor (&p), processorRef (p)
+    : juce::AudioProcessorEditor (&p), processorRef (p)
 {
     setSize (960, 540);
     orangeLaf.accentColour = juce::Colour (0xffff7700);
 
-    auto setupSlider = [this] (juce::Slider& sl, juce::LookAndFeel* laf, double minVal, double maxVal, double defaultVal, double step) {
-        sl.setSliderStyle (juce::sl.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 65, 18);
-        sl.setLookAndFeel (laf);
-        sl.setRange (minVal, maxVal, step);
-        sl.setValue (defaultVal);
-        addAndMakeVisible (sl);
-    };
+    inGainKnob.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    inGainKnob.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 65, 18);
+    inGainKnob.setLookAndFeel (&knobLaf);
+    inGainKnob.setRange (-24.0, 24.0, 0.1);
+    inGainKnob.setValue (1.8);
+    addAndMakeVisible (inGainKnob);
 
-    setupSlider (inGainKnob,  &knobLaf,   -24.0,  24.0,   1.8, 0.1);
-    setupSlider (threshKnob,  &knobLaf,   -60.0,   0.0, -21.5, 0.1);
-    setupSlider (ratioKnob,   &knobLaf,     1.0,  20.0,   5.5, 0.1);
-    setupSlider (attackKnob,  &knobLaf,     0.1, 100.0,  12.0, 0.1);
-    setupSlider (releaseKnob, &knobLaf,    10.0, 1000.0, 160.0, 1.0);
-    setupSlider (makeupKnob,  &knobLaf,   -12.0,  24.0,   3.2, 0.1);
-    setupSlider (mixKnob,     &orangeLaf,   0.0, 100.0, 100.0, 1.0);
-    setupSlider (driveKnob,   &orangeLaf,   0.0,  12.0,   2.1, 0.1);
-    setupSlider (ceilingKnob, &orangeLaf, -12.0,   0.0,  -0.3, 0.1);
+    threshKnob.setSliderStyle (threshKnob.setTextBoxStyle (juce::false, 65, 18);obLaf);
+    threshKnob.setRange (-60.0, 0.0, 0.1);
+    threshKnob.setValue (-21.5);
+    addAndMakeVisible (threshKnob);
+
+    ratioKnob.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    ratioKnob.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 65, 18);
+    ratioKnob.setLookAndFeel (&knobLaf);
+    ratioKnob.setRange (1.0, 20.0, 0.1);
+    ratioKnob.setValue (5.5);
+    addAndMakeVisible (ratioKnob);
+
+    attackKnob.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    attackKnob.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 65, 18);
+    attackKnob.setLookAndFeel (&knobLaf);
+    attackKnob.setRange (0.1, 100.0, 0.1);
+    attackKnob.setValue (12.0);
+    addAndMakeVisible (attackKnob);
+
+    releaseKnob.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    releaseKnob.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 65, 18);
+    releaseKnob.setLookAndFeel (&knobLaf);
+    releaseKnob.setRange (10.0, 1000.0, 1.0);
+    releaseKnob.setValue (160.0);
+    addAndMakeVisible (releaseKnob);
+
+    makeupKnob.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    makeupKnob.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 65, 18);
+    makeupKnob.setLookAndFeel (&knobLaf);
+    makeupKnob.setRange (-12.0, 24.0, 0.1);
+    makeupKnob.setValue (3.2);
+    addAndMakeVisible (makeupKnob);
+
+    mixKnob.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    mixKnob.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 65, 18);
+    mixKnob.setLookAndFeel (&orangeLaf);
+    mixKnob.setRange (0.0, 100.0, 1.0);
+    mixKnob.setValue (100.0);
+    addAndMakeVisible (mixKnob);
+
+    driveKnob.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    driveKnob.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 65, 18);
+    driveKnob.setLookAndFeel (&orangeLaf);
+    driveKnob.setRange (0.0, 12.0, 0.1);
+    driveKnob.setValue (2.1);
+    addAndMakeVisible (driveKnob);
+
+    ceilingKnob.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    ceilingKnob.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 65, 18);
+    ceilingKnob.setLookAndFeel (&orangeLaf);
+    ceilingKnob.setRange (-12.0, 0.0, 0.1);
+    ceilingKnob.setValue (-0.3);
+    addAndMakeVisible (ceilingKnob);
 
     addAndMakeVisible (clipperBtn);
     clipperBtn.setToggleState (true, juce::dontSendNotification);
@@ -55,19 +97,15 @@ void TheonBeatDynamicsAudioProcessorEditor::timerCallback()
 
 void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    // Fondo principal estilo rack
     g.fillAll (juce::Colour (0xff0d0f13));
 
-    // Cabecera del plugin
-    g.setColour (juce::Colg.setFont (juce::FontOptions (22.0f, juce::Font::bold));
+    // Cabecera
+    g.setColour (juce::Colours::white);
+    g.setFont (juce::FontOptions (22.0f, juce::Font::bold));
     g.drawText ("THEONBEAT", 20, 10, 140, 30, juce::Justification::left);
     g.setColour (juce::Colour (0xff00d4ff));
-    g.drawText ("DYNAMICS", 165, 10, 140, 30, juce::Justification::left);
-
-    // Módulos con bordes metálicos redondeados
-    auto drawSection = [&g] (juce::Rectangle<int> r, const juce::String& title) {
-        g.setColour (juce::Colour (0xff13161c));
-        g.fillRoundedRectangle (r.toFloat(), 6.0f);
+    g.drawText ("DYNAMICS", 165, 10, 140, 30, ju// Módulos
+    auto drawSection = [&g] (jur, const juce::String& title) {(0xff13161c));toFloat(), 6.0f);
         g.setColour (juce::Colour (0xff252a35));
         g.drawRoundedRectangle (r.toFloat(), 6.0f, 1.0f);
         g.setColour (juce::Colours::grey);
@@ -81,14 +119,13 @@ void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
     drawSection ({ 15, 290, 710, 220 }, "DISPLAY / METERING");
     drawSection ({ 735, 290, 210, 220 }, "LIM / CLIPPER");
 
-    // Etiquetas de vúmetros
+    // Vúmetros LED
     g.setFont (juce::FontOptions (11.0f, juce::Font::bold));
     g.setColour (juce::Colours::lightgrey);
     g.drawText ("INPUT", 30, 320, 60, 15, juce::Justification::left);
     g.drawText ("GR", 30, 345, 60, 15, juce::Justification::left);
     g.drawText ("OUTPUT", 30, 370, 60, 15, juce::Justification::left);
 
-    // Vúmetros LED
     auto drawLedBar = [&g] (int x, int y, int w, int h, float valNorm, juce::Colour fillCol) {
         int numSegments = 32;
         int activeSegments = juce::jlimit (0, numSegments, static_cast<int> (valNorm * numSegments));
@@ -105,12 +142,11 @@ void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
     drawLedBar (95, 345, 520, 14, std::abs (processorRef.meterGR.load()) / 20.0f, juce::Colour (0xffff1744));
     drawLedBar (95, 370, 520, 14, processorRef.meterOutL.load(), juce::Colour (0xff00e676));
 
-    // Cuadros Transfer Curve y RTA
+    // Curva y RTA
     g.setColour (juce::Colour (0xff171a22));
     g.fillRect (60, 400, 220, 95);
     g.fillRect (440, 400, 260, 95);
-    g.setColour (juce::Colour (0xff2f3542));
-    g.drawRect (60, 400, 220, 95);
+    g.setColour ((0xff2f3542)); 400, 220, 95);
     g.drawRect (440, 400, 260, 95);
 
     g.setColour (juce::Colours::cyan);
@@ -128,7 +164,7 @@ void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
     g.setColour (juce::Colour (0xffff7700));
     g.strokePath (rtaPath, juce::PathStrokeType (2.0f));
 
-    // --- BOTÓN CENTRAL: LISTEN (15s) ---
+    // BOTÓN CENTRAL: LISTEN (15s)
     auto learnBounds = juce::Rectangle<int> (290, 408, 140, 38);
     g.setColour (juce::Colour (0xff00d4ff));
     g.fillRoundedRectangle (learnBounds.toFloat(), 5.0f);
@@ -136,7 +172,7 @@ void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
     g.setFont (juce::FontOptions (11.0f, juce::Font::bold));
     g.drawText ("LISTEN VOICE (15s)", learnBounds, juce::Justification::centred);
 
-    // --- DETECTOR CENTRAL: ESCALA ---
+    // DETECTOR CENTRAL: ESCALA
     auto scaleBounds = juce::Rectangle<int> (290, 452, 140, 38);
     g.setColour (ju(0xff12151c));toFloat(), 5.0f);
     g.setColour (juce::Colour (0xff00d4ff));
