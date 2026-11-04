@@ -1,7 +1,6 @@
 #pragma once
 #include <JuceHeader.h>
-
-class TheonBeatDynamicsAudioProcessor;
+#include "PluginProcessor.h"
 
 struct StudioKnobLookAndFeel : public juce::LookAndFeel_V4
 {
@@ -24,7 +23,7 @@ struct StudioKnobLookAndFeel : public juce::LookAndFeel_V4
         arc.addCentredArc (center.x, center.y, radius - 2.5f, radius - 2.5f, 0.0f,
                            rotaryStartAngle, rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle), true);
         g.setColour (accentColour);
-        g.strokePath (arc, juce::PathStrokeType (3.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+        g.strokePath (arc,(3.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 
         auto angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
         auto thumbLength = radius * 0.60f;
@@ -35,16 +34,12 @@ struct StudioKnobLookAndFeel : public juce::LookAndFeel_V4
     }
 };
 
-class TheonBeatDynamicsAudioProcessorEditor : public juce::AudioProcessorEditor, private juce::Timer
-{
-public:
-    explicit TheonBeatDynamicsAudioProcessorEditor (TheonBeatDynamicsAudioProcessor&);
+class TheonBeatDynamicsjuce::AudioProcessorEditor, private juce::Timerexplicit TheonBeatDynamicsAudioProcessorEditor (TheonBeatDynamicsAudioProcessor&);
     ~TheonBeatDynamicsAudioProcessorEditor() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
     void timerCallback() override;
-    void mouseUp (const juce::MouseEvent& e) override;
 
 private:
     TheonBeatDynamicsAudioProcessor& processorRef;
