@@ -1,7 +1,4 @@
-here    name: Build VST3 Windows
-
-push:
-    branches: [ "main", "master" ]
+ VST3 Windows ]
   workflow_dispatch:
 
 jobs:
