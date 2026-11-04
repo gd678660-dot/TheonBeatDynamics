@@ -7,7 +7,22 @@ TheonBeatDynamicsAudioProcessorEditor::TheonBeatDynamicsAudioProcessorEditor (Th
     setSize (800, 600);
 
     addAndMakeVisible (voiceAiButton);
-    voiceAiButton.onClick = [this]()
+    voiceAiButton.addListener (this);
+
+    addAndMakeVisible (detectScaleButton);
+    detectScaleButton.addListener (this);
+}
+
+TheonBeatDynamicsAudioProcessorEditor::~TheonBeatDynamicsAudioProcessorEditor()
+{
+    voiceAiButton.removeListener (this);
+    detectScaleButton.removeListener (this);
+    stopTimer();
+}
+
+void TheonBeatDynamicsAudioProcessorEditor::buttonClicked (juce::Button* button)
+{
+    if (button == &voiceAiButton)
     {
         if (!isListeningVoice)
         {
@@ -15,18 +30,11 @@ TheonBeatDynamicsAudioProcessorEditor::TheonBeatDynamicsAudioProcessorEditor (Th
             listenSeconds = 15;
             startTimer (1000);
         }
-    };
-
-    addAndMakeVisible (detectScaleButton);
-    detectScaleButton.onClick = [this]()
+    }
+    else if (button == &detectScaleButton)
     {
         audioProcessor.detectScaleFromBeat();
-    };
-}
-
-TheonBeatDynamicsAudioProcessorEditor::~TheonBeatDynamicsAudioProcessorEditor()
-{
-    stopTimer();
+    }
 }
 
 void TheonBeatDynamicsAudioProcessorEditor::timerCallback()
