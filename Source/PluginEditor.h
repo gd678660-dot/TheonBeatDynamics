@@ -4,8 +4,7 @@
 #include "PluginProcessor.h"
 
 class TheonBeatDynamicsAudioProcessorEditor  : public juce::AudioProcessorEditor,
-                                              public juce::Timer
-{
+                                              public ju{
 public:
     explicit TheonBeatDynamicsAudioProcessorEditor (TheonBeatDynamicsAudioProcessor&);
     ~TheonBeatDynamicsAudioProcessorEditor() override;
@@ -17,12 +16,11 @@ public:
 private:
     TheonBeatDynamicsAudioProcessor& audioProcessor;
 
-    // Nombre idéntico al .cpp: voiceAiButton
     juce::TextButton voiceAiButton { "15S VOICE PRESET" };
     juce::TextButton detectScaleButton { "DETECTAR ESCALA" };
 
-    int listenSeconds = 15;
-    bool isListeningVoice = false;
+    int listenSeconds { 15 };
+    bool isListeningVoice { false };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TheonBeatDynamicsAudioProcessorEditor)
 };
