@@ -17,8 +17,8 @@ public:
 private:
     TheonBeatDynamicsAudioProcessor& audioProcessor;
 
-    // Botones interactivos
-    juce::TextButton voiceListenButton { "15S VOICE PRESET" };
+    // Nombre idéntico al .cpp: voiceAiButton
+    juce::TextButton voiceAiButton { "15S VOICE PRESET" };
     juce::TextButton detectScaleButton { "DETECTAR ESCALA" };
 
     int listenSeconds = 15;
