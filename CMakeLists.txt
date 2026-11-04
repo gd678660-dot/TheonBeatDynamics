@@ -36,6 +36,6 @@ target_compile_definitions(TheonBeatDynamics PUBLIC
 
 target_link_libraries(TheonBeatDynamics PRIVATE
     juce::juce_audio_utils
-    juce::juce_dsp
     juce::juce_gui_basics
-    ju)
+    juce::juce_gui_extra
+)
