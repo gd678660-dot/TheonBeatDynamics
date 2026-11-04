@@ -6,7 +6,6 @@ TheonBeatDynamicsAudioProcessorEditor::TheonBeatDynamicsAudioProcessorEditor (Th
 {
     setSize (800, 600);
 
-    // Configurar botón 15s Voice Preset
     addAndMakeVisible (voiceAiButton);
     voiceAiButton.onClick = [this]()
     {
@@ -18,7 +17,6 @@ TheonBeatDynamicsAudioProcessorEditor::TheonBeatDynamicsAudioProcessorEditor (Th
         }
     };
 
-    // Configurar botón Detectar Escala
     addAndMakeVisible (detectScaleButton);
     detectScaleButton.onClick = [this]()
     {
@@ -31,7 +29,8 @@ TheonBeatDynamicsAudioProcessorEditor::~TheonBeatDynamicsAudioProcessorEditor()
     stopTimer();
 }
 
-void TheonBeatDynamicsAudioProcessor{
+void TheonBeatDynamicsAudioProcessorEditor::timerCallback()
+{
     listenSeconds--;
     voiceAiButton.setButtonText ("ESCUCHANDO (" + juce::String (listenSeconds) + "s)");
 
@@ -46,16 +45,16 @@ void TheonBeatDynamicsAudioProcessor{
 
 void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    // Fondo oscuro estilo TheonBeat Dynamics
     g.fillAll (juce::Colour (0xff0c0d11));
 
-    // Logo y textos
     g.setColour (juce::Colours::white);
-    g.setFont ((20.0f, juce::Font::bold));Text ("THEONBEAT", 16, 14, 130, 24,g.setColour (juce::Colour (0xff00d2ff)); // Cyan
+    g.setFont (juce::FontOptions (20.0f, juce::Font::bold));
+    g.drawText ("THEONBEAT", 16, 14, 130, 24, juce::Justification::left);
+
+    g.setColour (juce::Colour (0xff00d2ff));
     g.drawText ("DYNAMICS", 146, 14, 110, 24, juce::Justification::left);
 
-    g.setColour (juce::Colours::grey);
-    g.setFont (juce::FontOptions (12.0f));
+    g.setColour (g.setFont (juce::FontOptions (12.0f));
     g.drawText ("v1.1.0 (VST3)", 260, 18, 90, 20, juce::Justification::left);
 }
 
