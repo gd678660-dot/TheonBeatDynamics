@@ -6,19 +6,22 @@ TheonBeatDynamicsAudioProcessorEditor::TheonBeatDynamicsAudioProcessorEditor (Th
 {
     setSize (800, 600);
 
-    // Botón 15s Voice Preset
+    // Configurar botón 15s Voice Preset
     addAndMakeVisible (voiceAiButton);
-    voiceAiButton.onClick = [this]() {
-        if (!isListeningVoice) {
+    voiceAiButton.onClick = [this]()
+    {
+        if (!isListeningVoice)
+        {
             isListeningVoice = true;
             listenSeconds = 15;
             startTimer (1000);
         }
     };
 
-    // Botón Detectar Escala
+    // Configurar botón Detectar Escala
     addAndMakeVisible (detectScaleButton);
-    detectScaleButton.onClick = [this]() {
+    detectScaleButton.onClick = [this]()
+    {
         audioProcessor.detectScaleFromBeat();
     };
 }
@@ -28,12 +31,12 @@ TheonBeatDynamicsAudioProcessorEditor::~TheonBeatDynamicsAudioProcessorEditor()
     stopTimer();
 }
 
-void TheonBeatDynamicsAudioProcessorEditor::timerCallback()
-{
+void TheonBeatDynamicsAudioProcessor{
     listenSeconds--;
     voiceAiButton.setButtonText ("ESCUCHANDO (" + juce::String (listenSeconds) + "s)");
 
-    if (listenSeconds <= 0) {
+    if (listenSeconds <= 0)
+    {
         stopTimer();
         isListeningVoice = false;
         voiceAiButton.setButtonText ("15S VOICE PRESET");
@@ -43,13 +46,12 @@ void TheonBeatDynamicsAudioProcessorEditor::timerCallback()
 
 void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
 {
+    // Fondo oscuro estilo TheonBeat Dynamics
     g.fillAll (juce::Colour (0xff0c0d11));
 
+    // Logo y textos
     g.setColour (juce::Colours::white);
-    g.setFont (juce::FontOptions (20.0f, juce::Font::bold));
-    g.drawText ("THEONBEAT", 16, 14, 130, 24, juce::Justification::left);
-
-    g.setColour (juce::Colour (0xff00d2ff));
+    g.setFont ((20.0f, juce::Font::bold));Text ("THEONBEAT", 16, 14, 130, 24,g.setColour (juce::Colour (0xff00d2ff)); // Cyan
     g.drawText ("DYNAMICS", 146, 14, 110, 24, juce::Justification::left);
 
     g.setColour (juce::Colours::grey);
