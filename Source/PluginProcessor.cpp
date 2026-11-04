@@ -5,9 +5,9 @@ TheonBeatDynamicsAudioProcessor::TheonBeatDynamicsAudioProcessor()
     : AudioProcessor (BusesProperties()
                         .withInput  ("Input",     juce::AudioChannelSet::stereo(), true)
                         .withOutput ("Output",    juce::AudioChannelSet::stereo(), true)
-                        .withInput  ("Sidechain", juce::AudioChannelSet::stereo(), true)),
-      apvts (*this, nullptr, "Parameters", createParameterLayout())
+                        .withInput  ("Sidechain", juce::AudioChannelSet::stereo(), true))
 {
+    apvts = std::make_unique<juce::AudioProcessorValueTreeState> (*this, nullptr, "Parameters", createParameterLayout());
 }
 
 TheonBeatDynamicsAudioProcessor::~TheonBeatDynamicsAudioProcessor() {}
@@ -35,13 +35,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout TheonBeatDynamicsAudioProces
 
 void TheonBeatDynamicsAudioProcessor::prepareToPlay (double sampleRate, int)
 {
-    // Highpass en 80Hz
     highPassL.setCoefficients (juce::IIRCoefficients::makeHighPass (sampleRate, 80.0));
     highPassR.setCoefficients (juce::IIRCoefficients::makeHighPass (sampleRate, 80.0));
 
-    // Air Shelf en 10kHz
     airShelfL.setCoefficients (juce::IIRCoefficients::makeHighShelf (sampleRate, 10000.0, 1.5));
-    airShelfR.setCoefficients (juce::IIR(sampleRate, 10000.0, 1.5));
+    airShelfR.setCoefficients (juce::IIRCoefficients::makeHighShelf (sampleRate, 10000.0, 1.5));
 
     pitchBuffer.setSize (2, (int)sampleRate);
     pitchBuffer.clear();
@@ -51,7 +49,8 @@ void TheonBeatDynamicsAudioProcessor::releaseResources() {}
 
 bool TheonBeatDynamicsAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
-    return layouts.getMainOutputChannelSet() == juce::}
+    return layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo();
+}
 
 void TheonBeatDynamicsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
@@ -62,7 +61,7 @@ void TheonBeatDynamicsAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // 1. Detección de escala desde el beat (Sidechain)
+    // 1. Detección de escala desde Sidechain (el beat)
     auto sidechainBus = getBusBuffer (buffer, true, 1);
     if (sidechainBus.getNumChannels() > 0)
     {
@@ -78,9 +77,10 @@ void TheonBeatDynamicsAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
     }
 
     // 2. Filtros HighPass y Fresh Air
-    float airGain = *apvts.getRawParameterValue ("AIR_FRESH");
+    float airGain = *apvts->getRawParameterValue ("AIR_FRESH");
     float gainLinear = juce::Decibels::decibelsToGain (airGain);
-    airShelfL.setCoefficients (juce::IIR(getSampleRate(), 10000.0, gainLinear));    airShelfR.setCoefficients (juce::IIRCoefficients::makeHighShelf (getSampleRate(), 10000.0, gainLinear));
+    airShelfL.setCoefficients (juce::IIRCoefficients::makeHighShelf (getSampleRate(), 10000.0, gainLinear));
+    airShelfR.setCoefficients (juce::IIRCoefficients::makeHighShelf (getSampleRate(), 10000.0, gainLinear));
 
     if (buffer.getNumChannels() > 0)
     {
@@ -94,7 +94,7 @@ void TheonBeatDynamicsAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
     }
 
     // 3. AutoTune / Pitch Shifting
-    float correction = *apvts.getRawParameterValue ("CORRECTION") * 0.01f;
+    float correction = *apvts->getRawParameterValue ("CORRECTION") * 0.01f;
     int numSamples = buffer.getNumSamples();
     int bufLen = pitchBuffer.getNumSamples();
 
@@ -118,7 +118,7 @@ void TheonBeatDynamicsAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
     writePosition = (writePosition + numSamples) % bufLen;
 
     // Ganancia final
-    float makeupDb = *apvts.getRawParameterValue ("MAKEUP");
+    float makeupDb = *apvts->getRawParameterValue ("MAKEUP");
     buffer.applyGain (juce::Decibels::decibelsToGain (makeupDb));
 }
 
@@ -134,19 +134,19 @@ void TheonBeatDynamicsAudioProcessor::detectScaleFromBeat()
             maxIndex = i;
         }
     }
-    if (auto* param = apvts.getParameter ("KEY"))
+    if (auto* param = apvts->getParameter ("KEY"))
         param->setValueNotifyingHost ((float)maxIndex / 11.0f);
-    if (auto* param = apvts.getParameter ("SCALE"))
+    if (auto* param = apvts->getParameter ("SCALE"))
         param->setValueNotifyingHost (1.0f / 2.0f);
 }
 
 void TheonBeatDynamicsAudioProcessor::calibrateVocalPreset()
 {
-    if (auto* p = apvts.getParameter ("AIR_FRESH")) p->setValueNotifyingHost (8.5f / 18.0f);
-    if (auto* p = apvts.getParameter ("THRESHOLD")) p->setValueNotifyingHost ((-24.0f + 60.0f) / 60.0f);
-    if (auto* p = apvts.getParameter ("ATTACK"))    p->setValueNotifyingHost (12.0f / 100.0f);
-    if (auto* p = apvts.getParameter ("TUNE_SPEED")) p->setValueNotifyingHost (10.0f / 100.0f);
-    if (auto* p = apvts.getParameter ("CORRECTION")) p->setValueNotifyingHost (0.92f);
+    if (auto* p = apvts->getParameter ("AIR_FRESH")) p->setValueNotifyingHost (8.5f / 18.0f);
+    if (auto* p = apvts->getParameter ("THRESHOLD")) p->setValueNotifyingHost ((-24.0f + 60.0f) / 60.0f);
+    if (auto* p = apvts->getParameter ("ATTACK"))    p->setValueNotifyingHost (12.0f / 100.0f);
+    if (auto* p = apvts->getParameter ("TUNE_SPEED")) p->setValueNotifyingHost (10.0f / 100.0f);
+    if (auto* p = apvts->getParameter ("CORRECTION")) p->setValueNotifyingHost (0.92f);
 }
 
 juce::AudioProcessorEditor* TheonBeatDynamicsAudioProcessor::createEditor()
@@ -154,9 +154,22 @@ juce::AudioProcessorEditor* TheonBeatDynamicsAudioProcessor::createEditor()
     return new TheonBeatDynamicsAudioProcessorEditor (*this);
 }
 
+bool TheonBeatDynamicsAudioProcessor::hasEditor() const { return true; }
+const juce::String TheonBeatDynamicsAudioProcessor::getName() const { return "TheonBeat Dynamics"; }
+bool TheonBeatDynamicsAudioProcessor::acceptsMidi() const { return false; }
+bool TheonBeatDynamicsAudioProcessor::producesMidi() const { return false; }
+bool TheonBeatDynamicsAudioProcessor::isMidiEffect() const { return false; }
+double TheonBeatDynamicsAudioProcessor::getTailLengthSeconds() const { return 0.0; }
+
+int TheonBeatDynamicsAudioProcessor::getNumPrograms() { return 1; }
+int TheonBeatDynamicsAudioProcessor::getCurrentProgram() { return 0; }
+void TheonBeatDynamicsAudioProcessor::setCurrentProgram (int) {}
+const juce::String TheonBeatDynamicsAudioProcessor::getProgramName (int) { return {}; }
+void TheonBeatDynamicsAudioProcessor::changeProgramName (int, const juce::String&) {}
+
 void TheonBeatDynamicsAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    auto state = apvts.copyState();
+    auto state = apvts->copyState();
     std::unique_ptr<juce::XmlElement> xml (state.createXml());
     copyXmlToBinary (*xml, destData);
 }
@@ -165,8 +178,8 @@ void TheonBeatDynamicsAudioProcessor::setStateInformation (const void* data, int
 {
     std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
     if (xmlState.get() != nullptr)
-        if (xmlState->hasTagName (apvts.state.getType()))
-            apvts.replaceState (juce::ValueTree::fromXml (*xmlState));
+        if (xmlState->hasTagName (apvts->state.getType()))
+            apvts->replaceState (juce::ValueTree::fromXml (*xmlState));
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
