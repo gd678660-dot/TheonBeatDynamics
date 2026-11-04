@@ -10,7 +10,10 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      -repository
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+    
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
