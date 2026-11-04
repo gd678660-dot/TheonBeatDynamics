@@ -18,7 +18,7 @@ juce_add_plugin(TheonBeatDynamics
     FORMATS VST3
     PRODUCT_NAME "TheonBeat Dynamics"
 )
-
+juce_generate_juce_header(TheonBeatDynamics)
 target_sources(TheonBeatDynamics PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
