@@ -16,7 +16,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout TheonBeatDynamicsAudioProces
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
 
-    // 1. Afinador AutoTune
     params.push_back (std::make_unique<juce::AudioParameterChoice> ("KEY", "Key",
         juce::StringArray { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" }, 0));
     params.push_back (std::make_unique<juce::AudioParameterChoice> ("SCALE", "Scale",
@@ -24,32 +23,25 @@ juce::AudioProcessorValueTreeState::ParameterLayout TheonBeatDynamicsAudioProces
     params.push_back (std::make_unique<juce::AudioParameterFloat> ("TUNE_SPEED", "Retune Speed", 0.0f, 100.0f, 15.0f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> ("CORRECTION", "Correction", 0.0f, 100.0f, 90.0f));
 
-    // 2. Fresh Vocal Strip
     params.push_back (std::make_unique<juce::AudioParameterFloat> ("THRESHOLD", "Threshold", -60.0f, 0.0f, -20.0f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> ("RATIO", "Ratio", 1.0f, 20.0f, 4.0f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> ("ATTACK", "Attack", 1.0f, 100.0f, 12.0f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> ("RELEASE", "Release", 10.0f, 1000.0f, 160.0f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> ("AIR_FRESH", "Fresh Air", 0.0f, 18.0f, 6.5f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> ("MAKEUP", "Makeup Gain", -12.0f, 24.0f, 0.0f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> ("MIX", "Mix", 0.0f, 100.0f, 100.0f));
 
     return { params.begin(), params.end() };
 }
 
-void TheonBeatDynamicsAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void TheonBeatDynamicsAudioProcessor::prepareToPlay (double sampleRate, int)
 {
-    juce::dsp::ProcessSpec spec;
-    spec.sampleRate = sampleRate;
-    spec.maximumBlockSize = samplesPerBlock;
-    spec.numChannels = getTotalNumOutputChannels();
+    // Highpass en 80Hz
+    highPassL.setCoefficients (juce::IIRCoefficients::makeHighPass (sampleRate, 80.0));
+    highPassR.setCoefficients (juce::IIRCoefficients::makeHighPass (sampleRate, 80.0));
 
-    *highPassFilter.state = *juce::dsp::IIR::Coefficients<float>::makeHighPass (sampleRate, 80.0f);
-    highPassFilter.prepare (spec);
-
-    *airShelfFilter.state = *juce::dsp::IIR::Coefficients<float>::makeHighShelf (sampleRate, 10000.0f, 0.707f, 1.5f);
-    airShelfFilter.prepare (spec);
-
-    compressor.prepare (spec);
+    // Air Shelf en 10kHz
+    airShelfL.setCoefficients (juce::IIRCoefficients::makeHighShelf (sampleRate, 10000.0, 1.5));
+    airShelfR.setCoefficients (juce::IIR(sampleRate, 10000.0, 1.5));
 
     pitchBuffer.setSize (2, (int)sampleRate);
     pitchBuffer.clear();
@@ -59,8 +51,7 @@ void TheonBeatDynamicsAudioProcessor::releaseResources() {}
 
 bool TheonBeatDynamicsAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
-    return layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo();
-}
+    return layouts.getMainOutputChannelSet() == juce::}
 
 void TheonBeatDynamicsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
@@ -71,7 +62,7 @@ void TheonBeatDynamicsAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // Detector de escala desde Sidechain (Beat)
+    // 1. Detección de escala desde el beat (Sidechain)
     auto sidechainBus = getBusBuffer (buffer, true, 1);
     if (sidechainBus.getNumChannels() > 0)
     {
@@ -86,22 +77,23 @@ void TheonBeatDynamicsAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
         }
     }
 
-    juce::dsp::AudioBlock<float> block (buffer);
-    juce::dsp::ProcessContextReplacing<float> context (block);
-    highPassFilter.process (context);
-
+    // 2. Filtros HighPass y Fresh Air
     float airGain = *apvts.getRawParameterValue ("AIR_FRESH");
     float gainLinear = juce::Decibels::decibelsToGain (airGain);
-    *airShelfFilter.state = *juce::dsp::IIR::Coefficients<float>::makeHighShelf (getSampleRate(), 10000.0f, 0.707f, gainLinear);
-    airShelfFilter.process (context);
+    airShelfL.setCoefficients (juce::IIR(getSampleRate(), 10000.0, gainLinear));    airShelfR.setCoefficients (juce::IIRCoefficients::makeHighShelf (getSampleRate(), 10000.0, gainLinear));
 
-    compressor.setThreshold (*apvts.getRawParameterValue ("THRESHOLD"));
-    compressor.setRatio (*apvts.getRawParameterValue ("RATIO"));
-    compressor.setAttack (*apvts.getRawParameterValue ("ATTACK"));
-    compressor.setRelease (*apvts.getRawParameterValue ("RELEASE"));
-    compressor.process (context);
+    if (buffer.getNumChannels() > 0)
+    {
+        highPassL.processSamples (buffer.getWritePointer (0), buffer.getNumSamples());
+        airShelfL.processSamples (buffer.getWritePointer (0), buffer.getNumSamples());
+    }
+    if (buffer.getNumChannels() > 1)
+    {
+        highPassR.processSamples (buffer.getWritePointer (1), buffer.getNumSamples());
+        airShelfR.processSamples (buffer.getWritePointer (1), buffer.getNumSamples());
+    }
 
-    // AutoTune / Pitch Shifter
+    // 3. AutoTune / Pitch Shifting
     float correction = *apvts.getRawParameterValue ("CORRECTION") * 0.01f;
     int numSamples = buffer.getNumSamples();
     int bufLen = pitchBuffer.getNumSamples();
@@ -125,6 +117,7 @@ void TheonBeatDynamicsAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
     }
     writePosition = (writePosition + numSamples) % bufLen;
 
+    // Ganancia final
     float makeupDb = *apvts.getRawParameterValue ("MAKEUP");
     buffer.applyGain (juce::Decibels::decibelsToGain (makeupDb));
 }
@@ -149,9 +142,9 @@ void TheonBeatDynamicsAudioProcessor::detectScaleFromBeat()
 
 void TheonBeatDynamicsAudioProcessor::calibrateVocalPreset()
 {
-    if (auto* p = apvts.getParameter ("AIR_FRESH"))  p->setValueNotifyingHost (8.5f / 18.0f);
-    if (auto* p = apvts.getParameter ("THRESHOLD"))  p->setValueNotifyingHost ((-24.0f + 60.0f) / 60.0f);
-    if (auto* p = apvts.getParameter ("ATTACK"))     p->setValueNotifyingHost (12.0f / 100.0f);
+    if (auto* p = apvts.getParameter ("AIR_FRESH")) p->setValueNotifyingHost (8.5f / 18.0f);
+    if (auto* p = apvts.getParameter ("THRESHOLD")) p->setValueNotifyingHost ((-24.0f + 60.0f) / 60.0f);
+    if (auto* p = apvts.getParameter ("ATTACK"))    p->setValueNotifyingHost (12.0f / 100.0f);
     if (auto* p = apvts.getParameter ("TUNE_SPEED")) p->setValueNotifyingHost (10.0f / 100.0f);
     if (auto* p = apvts.getParameter ("CORRECTION")) p->setValueNotifyingHost (0.92f);
 }
