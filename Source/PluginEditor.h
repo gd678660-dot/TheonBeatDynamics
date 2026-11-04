@@ -1,23 +1,52 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "PluginProcessor.h"
 
-class TheonBeatDynamicsAudioProcessorEditor  : public juce::AudioProcessorEditor,
-                                              public juce::Timer
+class TheonBeatDynamicsAudioProcessor  : public juce::AudioProcessor
 {
 public:
-    explicit TheonBeatDynamicsAudioProcessorEditor (TheonBeatDynamicsAudioProcessor&);
-    ~TheonBeatDynamicsAudioProcessorEditor() override;
+    TheonBeatDynamicsAudioProcessor();
+    ~TheonBeatDynamicsAudioProcessor() override;
 
-    void paint (override;:
-    TheonBeatDynamicsAudioProcessor& audioProcessor;
+    void prepareToPlay (double sampleRate, int samplesPerBlock) override;
+    void releaseResources() override;
+    bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
+    void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
-    juce::TextButton voiceAiButton;
-    juce::TextButton detectScaleButton;
+    juce::AudioProcessorEditor* createEditor() override;
+    bool hasEditor() const override;
 
-    int listenSeconds { 15 };
-    bool isListeningVoice { false };
+    const juce::String getName() const override;
+    bool acceptsMidi() const override;
+    bool producesMidi() const override;
+    bool isMidiEffect() const override;
+    double getTailLengthSeconds() const override;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TheonBeatDynamicsAudioProcessorEditor)
+    int getNumPrograms() override;
+    int getCurrentProgram() override;
+    void setCurrentProgram (int index) override;
+    const juce::String getProgramName (int index) override;
+    void changeProgramName (int index, const juce::String& newName) override;
+
+    void getStateInformation (juce::MemoryBlock& destData) override;
+    void setStateInformation (const void* data, int sizeInBytes) override;
+
+    void detectScaleFromBeat();
+    void calibrateVocalPreset();
+
+    std::unique_ptr<juce::AudioProcessorValueTreeState> apvts;
+
+private:
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+
+    juce::IIRFilter highPassL, highPassR;
+    juce::IIRFilter airShelfL, airShelfR;
+
+    juce::AudioBuffer<float> pitchBuffer;
+    int writePosition { 0 };
+    float readPhase { 0.0f };
+
+    float chromaEnergy[12] = { 0.0f };
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TheonBeatDynamicsAudioProcessor)
 };
