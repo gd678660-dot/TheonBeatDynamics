@@ -8,8 +8,9 @@ TheonBeatDynamicsAudioProcessorEditor::TheonBeatDynamicsAudioProcessorEditor (Th
     orangeLaf.accentColour = juce::Colour (0xffff7700);
 
     auto setupSlider = [this] (juce::Slider& sl, juce::LookAndFeel* laf, double minVal, double maxVal, double defaultVal, double step) {
-        sl.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
-        sl.setTextBoxStyle (juce::false, 65, 18);.setRange (minVal, maxVal, step);
+        sl.setSliderStyle (juce::sl.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 65, 18);
+        sl.setLookAndFeel (laf);
+        sl.setRange (minVal, maxVal, step);
         sl.setValue (defaultVal);
         addAndMakeVisible (sl);
     };
@@ -24,69 +25,17 @@ TheonBeatDynamicsAudioProcessorEditor::TheonBeatDynamicsAudioProcessorEditor (Th
     setupSlider (driveKnob,   &orangeLaf,   0.0,  12.0,   2.1, 0.1);
     setupSlider (ceilingKnob, &orangeLaf, -12.0,   0.0,  -0.3, 0.1);
 
-    inGainKnob.onValueChange = [this] {
-        if (processorRef.paramInputGain != nullptr)
-            *processorRef.paramInputGain = static_cast<float> (inGainKnob.getValue());
-    };
-
-    threshKnob.onValueChange = [this] {
-        if (processorRef.paramThreshold != nullptr)
-            *processorRef.paramThreshold = static_cast<float> (threshKnob.getValue());
-    };
-
-    ratioKnob.onValueChange = [this] {
-        if (processorRef.paramRatio != nullptr)
-            *processorRef.paramRatio = static_cast<float> (ratioKnob.getValue());
-    };
-
-    attackKnob.onValueChange = [this] {
-        if (processorRef.paramAttack != nullptr)
-            *processorRef.paramAttack = static_cast<float> (attackKnob.getValue());
-    };
-
-    releaseKnob.onValueChange = [this] {
-        if (processorRef.paramRelease != nullptr)
-            *processorRef.paramRelease = static_cast<float> (releaseKnob.getValue());
-    };
-
-    makeupKnob.onValueChange = [this] {
-        if (processorRef.paramMakeup != nullptr)
-            *processorRef.paramMakeup = static_cast<float> (makeupKnob.getValue());
-    };
-
-    mixKnob.onValueChange = [this] {
-        if (processorRef.paramMix != nullptr)
-            *processorRef.paramMix = static_cast<float> (mixKnob.getValue());
-    };
-
-    driveKnob.onValueChange = [this] {
-        if (processorRef.paramDrive != nullptr)
-            *processorRef.paramDrive = static_cast<float> (driveKnob.getValue());
-    };
-
-    ceilingKnob.onValueChange = [this] {
-        if (processorRef.paramCeiling != nullptr)
-            *processorRef.paramCeiling = static_cast<float> (ceilingKnob.getValue());
-    };
-
     addAndMakeVisible (clipperBtn);
     clipperBtn.setToggleState (true, juce::dontSendNotification);
-    clipperBtn.onClick = [this] {
-        if (processorRef.paramClipperOn != nullptr)
-            *processorRef.paramClipperOn = clipperBtn.getToggleState();
-    };
 
     addAndMakeVisible (bypassBtn);
     bypassBtn.setToggleState (false, juce::dontSendNotification);
-    bypassBtn.onClick = [this] {
-        if (processorRef.paramBypass != nullptr)
-            *processorRef.paramBypass = bypassBtn.getToggleState();
-    };
 
     startTimerHz (30);
 }
 
-TheonBeatDynamics{
+TheonBeatDynamicsAudioProcessorEditor::~TheonBeatDynamicsAudioProcessorEditor()
+{
     stopTimer();
     inGainKnob.setLookAndFeel (nullptr);
     threshKnob.setLookAndFeel (nullptr);
@@ -99,38 +48,23 @@ TheonBeatDynamics{
     ceilingKnob.setLookAndFeel (nullptr);
 }
 
-void TheonBeatDynamicsAudioProcessor(const juce::MouseEvent& e)::Rectangle<int> (290, 408, 140, 38);
-    if (learnBtnBounds.contains (e.getPosition()))
-    {
-        processorRef.startVocalLearn();
-    }
-}
-
 void TheonBeatDynamicsAudioProcessorEditor::timerCallback()
 {
-    if (!processorRef.isLearning.load())
-    {
-        if (processorRef.paramThreshold != nullptr && threshKnob.getValue() != processorRef.paramThreshold->get())
-            threshKnob.setValue (processorRef.paramThreshold->get(), juce::dontSendNotification);
-
-        if (processorRef.paramMakeup != nullptr && makeupKnob.getValue() != processorRef.paramMakeup->get())
-            makeupKnob.setValue (processorRef.paramMakeup->get(), juce::dontSendNotification);
-    }
     repaint();
 }
 
 void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
 {
+    // Fondo principal estilo rack
     g.fillAll (juce::Colour (0xff0d0f13));
 
-    // Cabecera
-    g.setColour (juce::Colours::white);
-    g.setFont (juce::FontOptions (22.0f, juce::Font::bold));
+    // Cabecera del plugin
+    g.setColour (juce::Colg.setFont (juce::FontOptions (22.0f, juce::Font::bold));
     g.drawText ("THEONBEAT", 20, 10, 140, 30, juce::Justification::left);
     g.setColour (juce::Colour (0xff00d4ff));
     g.drawText ("DYNAMICS", 165, 10, 140, 30, juce::Justification::left);
 
-    // Módulos principales
+    // Módulos con bordes metálicos redondeados
     auto drawSection = [&g] (juce::Rectangle<int> r, const juce::String& title) {
         g.setColour (juce::Colour (0xff13161c));
         g.fillRoundedRectangle (r.toFloat(), 6.0f);
@@ -138,8 +72,7 @@ void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
         g.drawRoundedRectangle (r.toFloat(), 6.0f, 1.0f);
         g.setColour (juce::Colours::grey);
         g.setFont (juce::FontOptions (11.0f, juce::Font::bold));
-        g.drawText (title, r.getX(), r.getY() + 5, r.getWidth(), 16, juce::Justification::centred);
-    };
+        g.drawText (title, r.getX(), r.getY() + 5, r.getWidth(), 16,};
 
     drawSection ({ 15, 50, 140, 230 }, "INPUT / DETECTOR");
     drawSection ({ 165, 50, 560, 230 }, "COMPRESSOR / EXPANDER");
@@ -148,12 +81,15 @@ void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
     drawSection ({ 15, 290, 710, 220 }, "DISPLAY / METERING");
     drawSection ({ 735, 290, 210, 220 }, "LIM / CLIPPER");
 
-    // Vúmetros LED
+    // Etiquetas de vúmetros
     g.setFont (juce::FontOptions (11.0f, juce::Font::bold));
     g.setColour (juce::Colours::lightgrey);
     g.drawText ("INPUT", 30, 320, 60, 15, juce::Justification::left);
     g.drawText ("GR", 30, 345, 60, 15, juce::Justification::left);
-    g.drawText ("OUTPUT", 30, 370, 60, 15,auto drawLedBar = [&g] (int x, int y, int w, int h, float valNorm, juce::Colour fillCol) {
+    g.drawText ("OUTPUT", 30, 370, 60, 15, juce::Justification::left);
+
+    // Vúmetros LED
+    auto drawLedBar = [&g] (int x, int y, int w, int h, float valNorm, juce::Colour fillCol) {
         int numSegments = 32;
         int activeSegments = juce::jlimit (0, numSegments, static_cast<int> (valNorm * numSegments));
         float segWidth = static_cast<float> (w) / numSegments;
@@ -192,31 +128,20 @@ void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
     g.setColour (juce::Colour (0xffff7700));
     g.strokePath (rtaPath, juce::PathStrokeType (2.0f));
 
-    // BOTÓN CENTRAL 1: LISTEN VOICE (15S)
-    bool isLearning = processorRef.isLearning.load();
-    auto learnBtnBounds = juce::Rectangle<int> (290, 408, 140, 38);
-    g.setColour (isLearning ? juce::Colour (0xffff3d00) : juce::Colour (0xff00d4ff));
-    g.fillRoundedRectangle (learnBtnBounds.toFloat(), 5.0f);
-    g.setColour (jug.setFont (juce::FontOptions (11.0f, juce::Font::bold));
-    if (isLearning)
-    {
-        int pct = static_cast<int> (processorRef.learnProgress.load() * 100.0f);
-        g.drawText ("LISTENING " + juce::String (pct) + "%", learnBtnBounds,}
-    else
-    {
-        g.drawText ("LISTEN VOICE (15s)", learnBtnBounds, juce::Justification::centred);
-    }
+    // --- BOTÓN CENTRAL: LISTEN (15s) ---
+    auto learnBounds = juce::Rectangle<int> (290, 408, 140, 38);
+    g.setColour (juce::Colour (0xff00d4ff));
+    g.fillRoundedRectangle (learnBounds.toFloat(), 5.0f);
+    g.setColour (juce::Colours::black);
+    g.setFont (juce::FontOptions (11.0f, juce::Font::bold));
+    g.drawText ("LISTEN VOICE (15s)", learnBounds, juce::Justification::centred);
 
-    // BOTÓN CENTRAL 2: DETECTOR DE ESCALA
+    // --- DETECTOR CENTRAL: ESCALA ---
     auto scaleBounds = juce::Rectangle<int> (290, 452, 140, 38);
-    g.setColour (juce::Colour (0xff12151c));
-    g.fillRoundedRectangle (scaleBounds.toFloat(), 5.0f);
+    g.setColour (ju(0xff12151c));toFloat(), 5.0f);
     g.setColour (juce::Colour (0xff00d4ff));
     g.drawRoundedRectangle (scaleBounds.toFloat(), 5.0f, 1.2f);
-    g.setFont (juce::FontOptions (10.0f, juce::Font::bold));
-    g.drawText ("SCALE: D MINOR (AUTO)", scaleBounds, juce::Justification::centred);
-
-    // Logo pie de página
+    g.setFont (juce::FontOptions (10.0f, jug.drawText ("SCALE: D MINOR (AUTO)", scaleBounds,// Logo pie de página
     g.setColour (juce::Colour (0xff00d4ff));
     g.drawText ("TheonBeat", getWidth() / 2 - 50, getHeight() - 25, 100, 20, juce::Justification::centred);
 }
