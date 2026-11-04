@@ -18,10 +18,14 @@ juce_add_plugin(TheonBeatDynamics
     FORMATS VST3
     PRODUCT_NAME "TheonBeat Dynamics"
 )
+
 juce_generate_juce_header(TheonBeatDynamics)
+
 target_sources(TheonBeatDynamics PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
+    Source/PluginEditor.cpp
+    Source/PluginEditor.h
 )
 
 target_compile_definitions(TheonBeatDynamics PUBLIC
@@ -33,4 +37,5 @@ target_compile_definitions(TheonBeatDynamics PUBLIC
 target_link_libraries(TheonBeatDynamics PRIVATE
     juce::juce_audio_utils
     juce::juce_dsp
-)
+    juce::juce_gui_basics
+    ju)
