@@ -6,7 +6,7 @@ TheonBeatDynamicsAudioProcessorEditor::TheonBeatDynamicsAudioProcessorEditor (Th
 {
     setSize (800, 600);
 
-    // Botón de 15s AI Voice Preset
+    // Botón 15s Voice Preset
     addAndMakeVisible (voiceAiButton);
     voiceAiButton.onClick = [this]() {
         if (!isListeningVoice) {
@@ -16,7 +16,7 @@ TheonBeatDynamicsAudioProcessorEditor::TheonBeatDynamicsAudioProcessorEditor (Th
         }
     };
 
-    // Botón Detector de Escala
+    // Botón Detectar Escala
     addAndMakeVisible (detectScaleButton);
     detectScaleButton.onClick = [this]() {
         audioProcessor.detectScaleFromBeat();
@@ -43,11 +43,22 @@ void TheonBeatDynamicsAudioProcessorEditor::timerCallback()
 
 void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colour (0xff0c0d11)); // Fondo oscuro estudio
+    g.fillAll (juce::Colour (0xff0c0d11));
+
+    g.setColour (juce::Colours::white);
+    g.setFont (juce::FontOptions (20.0f, juce::Font::bold));
+    g.drawText ("THEONBEAT", 16, 14, 130, 24, juce::Justification::left);
+
+    g.setColour (juce::Colour (0xff00d2ff));
+    g.drawText ("DYNAMICS", 146, 14, 110, 24, juce::Justification::left);
+
+    g.setColour (juce::Colours::grey);
+    g.setFont (juce::FontOptions (12.0f));
+    g.drawText ("v1.1.0 (VST3)", 260, 18, 90, 20, juce::Justification::left);
 }
 
 void TheonBeatDynamicsAudioProcessorEditor::resized()
 {
-    voiceAiButton.setBounds (420, 52, 130, 24);
-    detectScaleButton.setBounds (560, 52, 120, 24);
+    voiceAiButton.setBounds (440, 48, 140, 26);
+    detectScaleButton.setBounds (590, 48, 130, 26);
 }
