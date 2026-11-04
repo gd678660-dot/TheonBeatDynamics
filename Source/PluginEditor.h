@@ -1,59 +1,83 @@
-#pragma once
-#include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "PluginEditor.h"
 
-struct StudioKnobLookAndFeel : public juce::LookAndFeel_V4
+TheonBeatDynamicsAudioProcessor::TheonBeatDynamicsAudioProcessor()
+    : AudioProcessor (BusesProperties().withInput ("Input", juce::AudioChannelSet::stereo(), true)
+                                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true))
 {
-    juce::Colour accentColour { 0xff00d4ff };
+    addParameter (paramInputGain = new juce::AudioParameterFloat ("inGain", "Input Gain", -24.0f, 24.0f, 1.8f));
+    addParameter (paramThreshold = new juce::AudioParameterFloat ("thresh", "Threshold", -60.0f, 0.0f, -21.5f));
+    addParameter (paramRatio = new juce::AudioParameterFloat ("ratio", "Ratio", 1.0f, 20.0f, 5.5f));
+    addParameter (paramAttack = new juce::AudioParameterFloat ("attack", "Attack", 0.1f, 100.0f, 12.0f));
+    addParameter (paramRelease = new juce::AudioParameterFloat ("release", "Release", 10.0f, 1000.0f, 160.0f));
+    addParameter (paramMakeup = new juce::AudioParameterFloat ("makeup", "Makeup", -12.0f, 24.0f, 3.2f));
+    addParameter (paramMix = new juce::AudioParameterFloat ("mix", "Mix", 0.0f, 100.0f, 100.0f));
+    addParameter (paramDrive = new juce::AudioParameterFloat ("drive", "Drive", 0.0f, 12.0f, 2.1f));
+    addParameter (paramClipperOn = new juce::AudioParameterBool ("clipper", "Clipper ON", true));
+    addParameter (paramCeiling = new juce::AudioParameterFloat ("ceiling", "Ceiling", -12.0f, 0.0f, -0.3f));
+    addParameter (paramBypass = new juce::AudioParameterBool ("bypass", "Bypass", false));
+}
 
-    void drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height,
-                           float sliderPos, float rotaryStartAngle, float rotaryEndAngle,
-                           juce::Slider&) override
-    {
-        auto bounds = juce::Rectangle<int> (x, y, width, height).toFloat().reduced (4);
-        auto radius = juce::jmin (bounds.getWidth(), bounds.getHeight()) / 2.0f;
-        auto center = bounds.getCentre();
+TheonBeatDynamicsAudioProcessor::~TheonBeatDynamicsAudioProcessor() {}
 
-        // Cuerpo metálico oscuro
-        g.setColour (juce::Colour (0xff14171d));
-        g.fillEllipse (bounds);
-        g.setColour (juce::Colour (0xff282d37));
-        g.drawEllipse (bounds, 1.5f);
+void TheonBeatDynamicsAudioProcessor::prepareToPlay (double sampleRate, int /*samplesPerBlock*/) {
+    currentSampleRate = sampleRate;
+}
 
-        // Anillo exterior con arco de luz
-        juce::Path arc;
-        arc.addCentredArc (center.x, center.y, radius - 2.5f, radius - 2.5f, 0.0f,
-                           rotaryStartAngle, rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle), true);
-        g.setColour (accentColour);
-        g.strokePath (arc, juce::PathStrokeType (3.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+void TheonBeatDynamicsAudioProcessor::releaseResources() {}
 
-        // Puntero central
-        auto angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
-        auto thumbLength = radius * 0.60f;
-        g.setColour (juce::Colours::white);
-        g.drawLine (center.x, center.y,
-                    center.x + thumbLength * std::sin (angle),
-                    center.y - thumbLength * std::cos (angle), 2.5f);
+void TheonBeatDynamicsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&) {
+    if (paramBypass->get()) return;
+
+    auto totalNumInputChannels = getTotalNumInputChannels();
+    auto totalNumOutputChannels = getTotalNumOutputChannels();
+
+    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+        buffer.clear (i, 0, buffer.getNumSamples());
+
+    float inGainLin = juce::Decibels::decibelsToGain<float> (paramInputGain->get());
+    buffer.applyGain (inGainLin);
+
+    float inLevel = buffer.getMagnitude (0, buffer.getNumSamples());
+    meterInL.store (inLevel);
+
+    float threshDb = paramThreshold->get();
+    float inDb = juce::Decibels::gainToDecibels<float> (juce::jmax (inLevel, 0.00001f));
+    float grDb = 0.0f;
+
+    if (inDb > threshDb) {
+        float ratio = paramRatio->get();
+        float excess = inDb - threshDb;
+        grDb = -excess * (1.0f - (1.0f / ratio));
     }
-};
+    meterGR.store (grDb);
 
-class TheonBeatDynamicsAudioProcessorEditor : public juce::AudioProcessorEditor, private juce::Timer
-{
-public:
-    explicit TheonBeatDynamicsAudioProcessorEditor (TheonBeatDynamicsAudioProcessor&);
-    ~TheonBeatDynamicsAudioProcessorEditor() override;
+    float compGainLin = juce::Decibels::decibelsToGain<float> (grDb);
+    buffer.applyGain (compGainLin);
 
-    void paint (juce::Graphics&) override;
-    void resized() override;
-    void timerCallback() override;
+    float makeupLin = juce::Decibels::decibelsToGain<float> (paramMakeup->get());
+    buffer.applyGain (makeupLin);
 
-private:
-    TheonBeatDynamicsAudioProcessor& processorRef;
-    StudioKnobLookAndFeel knobLaf, orangeLaf;
+    if (paramClipperOn->get()) {
+        float ceilLin = juce::Decibels::decibelsToGain<float> (paramCeiling->get());
+        for (int ch = 0; ch < buffer.getNumChannels(); ++ch) {
+            auto* channelData = buffer.getWritePointer (ch);
+            for (int s = 0; s < buffer.getNumSamples(); ++s) {
+                channelData[s] = juce::jlimit (-ceilLin, ceilLin, channelData[s]);
+            }
+        }
+    }
 
-    juce::Slider inGainKnob, threshKnob, ratioKnob, attackKnob, releaseKnob;
-    juce::Slider makeupKnob, mixKnob, driveKnob, ceilingKnob;
-    juce::ToggleButton clipperBtn { "CLIPPER ON" }, bypassBtn { "BYPASS" };
+    meterOutL.store (buffer.getMagnitude (0, buffer.getNumSamples()));
+}
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TheonBeatDynamicsAudioProcessorEditor)
-};
+juce::AudioProcessorEditor* TheonBeatDynamicsAudioProcessor::createEditor() {
+    return new TheonBeatDynamicsAudioProcessorEditor (*this);
+}
+
+void TheonBeatDynamicsAudioProcessor::getStateInformation (juce::MemoryBlock&) {}
+void TheonBeatDynamicsAudioProcessor::setStateInformation (const void*, int) {}
+
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
+    return new TheonBeatDynamicsAudioProcessor();
+}
