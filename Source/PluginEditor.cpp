@@ -48,13 +48,14 @@ void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
     g.fillAll (juce::Colour (0xff0c0d11));
 
     g.setColour (juce::Colours::white);
-    g.setFont (juce::FontOptions (20.0f, juce::Font::bold));
+    g.setFont (20.0f);
     g.drawText ("THEONBEAT", 16, 14, 130, 24, juce::Justification::left);
 
     g.setColour (juce::Colour (0xff00d2ff));
     g.drawText ("DYNAMICS", 146, 14, 110, 24, juce::Justification::left);
 
-    g.setColour (g.setFont (juce::FontOptions (12.0f));
+    g.setColour (juce::Colours::grey);
+    g.setFont (12.0f);
     g.drawText ("v1.1.0 (VST3)", 260, 18, 90, 20, juce::Justification::left);
 }
 
