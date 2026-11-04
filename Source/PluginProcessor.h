@@ -1,10 +1,16 @@
 #pragma once
+
 #include <JuceHeader.h>
 
-class TheonBeatDynamicsAudiojuce::AudioProcessoronBeatDynamicsAudioProcessor() override;
+class TheonBeatDynamicsAudioProcessor  : public juce::AudioProcessor
+{
+public:
+    TheonBeatDynamicsAudioProcessor();
+    ~TheonBeatDynamicsAudioProcessor() override;
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
+    bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
     juce::AudioProcessorEditor* createEditor() override;
@@ -13,7 +19,6 @@ class TheonBeatDynamicsAudiojuce::AudioProcessoronBeatDynamicsAudioProcessor() o
     const juce::String getName() const override { return "TheonBeat Dynamics"; }
     bool acceptsMidi() const override { return false; }
     bool producesMidi() const override { return false; }
-    bool isMidiEffect() const override { return false; }
     double getTailLengthSeconds() const override { return 0.0; }
 
     int getNumPrograms() override { return 1; }
@@ -22,24 +27,29 @@ class TheonBeatDynamicsAudiojuce::AudioProcessoronBeatDynamicsAudioProcessor() o
     const juce::String getProgramName (int) override { return {}; }
     void changeProgramName (int, const juce::String&) override {}
 
-    void getStateInformation (destData) override;InBytes) override;
+    void getStateInformation (juce::MemoryBlock& destData) override;
+    void setStateInformation (const void* data, int sizeInBytes) override;
 
-    // Métricas para los vúmetros
-    std::atomic<float> meterInL { 0.0f };
-    std::atomic<float> meterOutL { 0.0f };
-    meterGR { 0.0f };ce::AudioParameterFloat* paramInputGain = nullptr;
-    juce::AudioParameterFloat* paramThreshold = nullptr;
-    juce::AudioParameterFloat* paramRatio = nullptr;
-    juce::AudioParameterFloat* paramAttack = nullptr;
-    juce::AudioParameterFloat* paramRelease = nullptr;
-    juce::AudioParameterFloat* paramMakeup = nullptr;
-    juce::AudioParameterFloat* paramMix = nullptr;
-    juce::AudioParameterFloat* paramDrive = nullptr;
-    juce::AudioParameterBool*  paramClipperOn = nullptr;
-    juce::AudioParameterFloat* paramCeiling = nullptr;
-    juce::AudioParameterBool*  paramBypass = nullptr;
+    // Métodos para el detector y el botón inteligente
+    void detectScaleFromBeat();
+    void calibrateVocalPreset();
+
+    juce::AudioProcessorValueTreeState apvts;
 
 private:
-    double currentSampleRate = 44100.0;
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+
+    // Filtros de la cadena vocal
+    juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>> highPassFilter;
+    juce::dsp::ProcessorDuplicator<juce::dsp::Ijuce::dsp::IIR::Coefficients<float>> airShelfFilter;    juce::dsp::Compressor<float> compressor;
+
+    // Buffer circular para AutoTune (Pitch Shifter de retardo variable)
+    juce::AudioBuffer<float> pitchBuffer;
+    int writePosition { 0 };
+    float readPhase { 0.0f };
+
+    // Detección de escala (Chromagram)
+    float chromaEnergy[12] = { 0.0f };
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TheonBeatDynamicsAudioProcessor)
 };
