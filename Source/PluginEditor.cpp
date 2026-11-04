@@ -5,72 +5,88 @@ TheonBeatDynamicsAudioProcessorEditor::TheonBeatDynamicsAudioProcessorEditor (Th
     : AudioProcessorEditor (&p), processorRef (p)
 {
     setSize (960, 540);
-    orangeLaf.accentColour =(0xffff7700);::Slider& sl, juce::LookAndFeel* laf) {
+    orangeLaf.accentColour = juce::Colour (0xffff7700);
+
+    auto setupSlider = [this] (juce::Slider& sl, juce::LookAndFeel* laf, double minVal, double maxVal, double defaultVal, double step) {
         sl.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
-        sl.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 65, 18);
-        sl.setLookAndFeel (laf);
+        sl.setTextBoxStyle (juce::false, 65, 18);.setRange (minVal, maxVal, step);
+        sl.setValue (defaultVal);
         addAndMakeVisible (sl);
     };
 
-    setupSlider (inGainKnob,  &knobLaf);
-    setupSlider (threshKnob,  &knobLaf);
-    setupSlider (ratioKnob,   &knobLaf);
-    setupSlider (attackKnob,  &knobLaf);
-    setupSlider (releaseKnob, &knobLaf);
-    setupSlider (makeupKnob,  &knobLaf);
-    setupSlider (mixKnob,     &orangeLaf);
-    setupSlider (driveKnob,   &orangeLaf);
-    setupSlider (ceilingKnob, &orangeLaf);
+    setupSlider (inGainKnob,  &knobLaf,   -24.0,  24.0,   1.8, 0.1);
+    setupSlider (threshKnob,  &knobLaf,   -60.0,   0.0, -21.5, 0.1);
+    setupSlider (ratioKnob,   &knobLaf,     1.0,  20.0,   5.5, 0.1);
+    setupSlider (attackKnob,  &knobLaf,     0.1, 100.0,  12.0, 0.1);
+    setupSlider (releaseKnob, &knobLaf,    10.0, 1000.0, 160.0, 1.0);
+    setupSlider (makeupKnob,  &knobLaf,   -12.0,  24.0,   3.2, 0.1);
+    setupSlider (mixKnob,     &orangeLaf,   0.0, 100.0, 100.0, 1.0);
+    setupSlider (driveKnob,   &orangeLaf,   0.0,  12.0,   2.1, 0.1);
+    setupSlider (ceilingKnob, &orangeLaf, -12.0,   0.0,  -0.3, 0.1);
 
-    inGainKnob.setRange (-24.0, 24.0, 0.1);
-    inGainKnob.setValue (processorRef.paramInputGain->get());
-    inGainKnob.onValueChange = [this] { *processorRef.paramInputGain = static_cast<float> (inGainKnob.getValue()); };
+    inGainKnob.onValueChange = [this] {
+        if (processorRef.paramInputGain != nullptr)
+            *processorRef.paramInputGain = static_cast<float> (inGainKnob.getValue());
+    };
 
-    threshKnob.setRange (-60.0, 0.0, 0.1);
-    threshKnob.setValue (processorRef.paramThreshold->get());
-    threshKnob.onValueChange = [this] { *processorRef.paramThreshold = static_cast<float> (threshKnob.getValue()); };
+    threshKnob.onValueChange = [this] {
+        if (processorRef.paramThreshold != nullptr)
+            *processorRef.paramThreshold = static_cast<float> (threshKnob.getValue());
+    };
 
-    ratioKnob.setRange (1.0, 20.0, 0.1);
-    ratioKnob.setValue (processorRef.paramRatio->get());
-    ratioKnob.onValueChange = [this] { *processorRef.paramRatio = static_cast<float> (ratioKnob.getValue()); };
+    ratioKnob.onValueChange = [this] {
+        if (processorRef.paramRatio != nullptr)
+            *processorRef.paramRatio = static_cast<float> (ratioKnob.getValue());
+    };
 
-    attackKnob.setRange (0.1, 100.0, 0.1);
-    attackKnob.setValue (processorRef.paramAttack->get());
-    attackKnob.onValueChange = [this] { *processorRef.paramAttack = static_cast<float> (attackKnob.getValue()); };
+    attackKnob.onValueChange = [this] {
+        if (processorRef.paramAttack != nullptr)
+            *processorRef.paramAttack = static_cast<float> (attackKnob.getValue());
+    };
 
-    releaseKnob.setRange (10.0, 1000.0, 1.0);
-    releaseKnob.setValue (processorRef.paramRelease->get());
-    releaseKnob.onValueChange = [this] { *processorRef.paramRelease = static_cast<float> (releaseKnob.getValue()); };
+    releaseKnob.onValueChange = [this] {
+        if (processorRef.paramRelease != nullptr)
+            *processorRef.paramRelease = static_cast<float> (releaseKnob.getValue());
+    };
 
-    makeupKnob.setRange (-12.0, 24.0, 0.1);
-    makeupKnob.setValue (processorRef.paramMakeup->get());
-    makeupKnob.onValueChange = [this] { *processorRef.paramMakeup = static_cast<float> (makeupKnob.getValue()); };
+    makeupKnob.onValueChange = [this] {
+        if (processorRef.paramMakeup != nullptr)
+            *processorRef.paramMakeup = static_cast<float> (makeupKnob.getValue());
+    };
 
-    mixKnob.setRange (0.0, 100.0, 1.0);
-    mixKnob.setValue (processorRef.paramMix->get());
-    mixKnob.onValueChange = [this] { *processorRef.paramMix = static_cast<float> (mixKnob.getValue()); };
+    mixKnob.onValueChange = [this] {
+        if (processorRef.paramMix != nullptr)
+            *processorRef.paramMix = static_cast<float> (mixKnob.getValue());
+    };
 
-    driveKnob.setRange (0.0, 12.0, 0.1);
-    driveKnob.setValue (processorRef.paramDrive->get());
-    driveKnob.onValueChange = [this] { *processorRef.paramDrive = static_cast<float> (driveKnob.getValue()); };
+    driveKnob.onValueChange = [this] {
+        if (processorRef.paramDrive != nullptr)
+            *processorRef.paramDrive = static_cast<float> (driveKnob.getValue());
+    };
 
-    ceilingKnob.setRange (-12.0, 0.0, 0.1);
-    ceilingKnob.setValue (processorRef.paramCeiling->get());
-    ceilingKnob.onValueChange = [this] { *processorRef.paramCeiling = static_cast<float> (ceilingKnob.getValue()); };
+    ceilingKnob.onValueChange = [this] {
+        if (processorRef.paramCeiling != nullptr)
+            *processorRef.paramCeiling = static_cast<float> (ceilingKnob.getValue());
+    };
 
     addAndMakeVisible (clipperBtn);
-    clipperBtn.setToggleState (processorRef.paramClipperOn->get(), juce::dontSendNotification);
-    clipperBtn.onClick = [this] { *processorRef.paramClipperOn = clipperBtn.getToggleState(); };
+    clipperBtn.setToggleState (true, juce::dontSendNotification);
+    clipperBtn.onClick = [this] {
+        if (processorRef.paramClipperOn != nullptr)
+            *processorRef.paramClipperOn = clipperBtn.getToggleState();
+    };
 
     addAndMakeVisible (bypassBtn);
-    bypassBtn.setToggleState (processorRef.paramBypass->get(), juce::dontSendNotification);
-    bypassBtn.onClick = [this] { *processorRef.paramBypass = bypassBtn.getToggleState(); };
+    bypassBtn.setToggleState (false, juce::dontSendNotification);
+    bypassBtn.onClick = [this] {
+        if (processorRef.paramBypass != nullptr)
+            *processorRef.paramBypass = bypassBtn.getToggleState();
+    };
 
     startTimerHz (30);
 }
 
-TheonBeatDynamicsAudioProcessorEditor::~TheonBeatDynamicsAudioProcessorEditor()
-{
+TheonBeatDynamics{
     stopTimer();
     inGainKnob.setLookAndFeel (nullptr);
     threshKnob.setLookAndFeel (nullptr);
@@ -83,10 +99,7 @@ TheonBeatDynamicsAudioProcessorEditor::~TheonBeatDynamicsAudioProcessorEditor()
     ceilingKnob.setLookAndFeel (nullptr);
 }
 
-void TheonBeatDynamicsAudioProcessorEditor::mouseUp (const juce::MouseEvent& e)
-{
-    // Clic en el botón central LISTEN VOICE (15S)
-    auto learnBtnBounds = juce::Rectangle<int> (290, 408, 140, 38);
+void TheonBeatDynamicsAudioProcessor(const juce::MouseEvent& e)::Rectangle<int> (290, 408, 140, 38);
     if (learnBtnBounds.contains (e.getPosition()))
     {
         processorRef.startVocalLearn();
@@ -97,9 +110,10 @@ void TheonBeatDynamicsAudioProcessorEditor::timerCallback()
 {
     if (!processorRef.isLearning.load())
     {
-        if (threshKnob.getValue() != processorRef.paramThreshold->get())
+        if (processorRef.paramThreshold != nullptr && threshKnob.getValue() != processorRef.paramThreshold->get())
             threshKnob.setValue (processorRef.paramThreshold->get(), juce::dontSendNotification);
-        if (makeupKnob.getValue() != processorRef.paramMakeup->get())
+
+        if (processorRef.paramMakeup != nullptr && makeupKnob.getValue() != processorRef.paramMakeup->get())
             makeupKnob.setValue (processorRef.paramMakeup->get(), juce::dontSendNotification);
     }
     repaint();
@@ -110,17 +124,22 @@ void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
     g.fillAll (juce::Colour (0xff0d0f13));
 
     // Cabecera
-    g.setColour (juce::g.setFont (juce::FontOptions (22.0f, jug.drawText ("THEONBEAT", 20, 10, 140, 30, juce::Justification::left);
+    g.setColour (juce::Colours::white);
+    g.setFont (juce::FontOptions (22.0f, juce::Font::bold));
+    g.drawText ("THEONBEAT", 20, 10, 140, 30, juce::Justification::left);
     g.setColour (juce::Colour (0xff00d4ff));
     g.drawText ("DYNAMICS", 165, 10, 140, 30, juce::Justification::left);
 
-    // Módulos principales con marcos oscuros
-    auto drawSection = [&g] (jur, const juce::String& title) {(0xff13161c));toFloat(), 6.0f);
+    // Módulos principales
+    auto drawSection = [&g] (juce::Rectangle<int> r, const juce::String& title) {
+        g.setColour (juce::Colour (0xff13161c));
+        g.fillRoundedRectangle (r.toFloat(), 6.0f);
         g.setColour (juce::Colour (0xff252a35));
         g.drawRoundedRectangle (r.toFloat(), 6.0f, 1.0f);
         g.setColour (juce::Colours::grey);
         g.setFont (juce::FontOptions (11.0f, juce::Font::bold));
-        g.drawText (title, r.getX(), r.getY() + 5, r.getWidth(), 16,};
+        g.drawText (title, r.getX(), r.getY() + 5, r.getWidth(), 16, juce::Justification::centred);
+    };
 
     drawSection ({ 15, 50, 140, 230 }, "INPUT / DETECTOR");
     drawSection ({ 165, 50, 560, 230 }, "COMPRESSOR / EXPANDER");
@@ -132,10 +151,9 @@ void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
     // Vúmetros LED
     g.setFont (juce::FontOptions (11.0f, juce::Font::bold));
     g.setColour (juce::Colours::lightgrey);
-    g.drawText ("INPUT", 30, 320, 60, 15, juce::g.drawText ("GR", 30, 345, 60, 15, juce::Justification::left);
-    g.drawText ("OUTPUT", 30, 370, 60, 15, juce::Justification::left);
-
-    auto drawLedBar = [&g] (int x, int y, int w, int h, float valNorm, juce::Colour fillCol) {
+    g.drawText ("INPUT", 30, 320, 60, 15, juce::Justification::left);
+    g.drawText ("GR", 30, 345, 60, 15, juce::Justification::left);
+    g.drawText ("OUTPUT", 30, 370, 60, 15,auto drawLedBar = [&g] (int x, int y, int w, int h, float valNorm, juce::Colour fillCol) {
         int numSegments = 32;
         int activeSegments = juce::jlimit (0, numSegments, static_cast<int> (valNorm * numSegments));
         float segWidth = static_cast<float> (w) / numSegments;
@@ -147,7 +165,8 @@ void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
         }
     };
 
-    drawLedBar (95, 320, 520, 14, processorRef.meterInL.load(),(0xff00e676));345, 520, 14, std::abs (processorRef.meterGR.load()) / 20.0f, juce::Colour (0xffff1744));
+    drawLedBar (95, 320, 520, 14, processorRef.meterInL.load(), juce::Colour (0xff00e676));
+    drawLedBar (95, 345, 520, 14, std::abs (processorRef.meterGR.load()) / 20.0f, juce::Colour (0xffff1744));
     drawLedBar (95, 370, 520, 14, processorRef.meterOutL.load(), juce::Colour (0xff00e676));
 
     // Cuadros Transfer Curve y RTA
@@ -178,12 +197,11 @@ void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
     auto learnBtnBounds = juce::Rectangle<int> (290, 408, 140, 38);
     g.setColour (isLearning ? juce::Colour (0xffff3d00) : juce::Colour (0xff00d4ff));
     g.fillRoundedRectangle (learnBtnBounds.toFloat(), 5.0f);
-    g.setColour (g.setFont (juce::FontOptions (11.0f, juce::Font::bold));
+    g.setColour (jug.setFont (juce::FontOptions (11.0f, juce::Font::bold));
     if (isLearning)
     {
         int pct = static_cast<int> (processorRef.learnProgress.load() * 100.0f);
-        g.drawText ("LISTENING " + juce::String (pct) + "%", learnBtnBounds, juce::Justification::centred);
-    }
+        g.drawText ("LISTENING " + juce::String (pct) + "%", learnBtnBounds,}
     else
     {
         g.drawText ("LISTEN VOICE (15s)", learnBtnBounds, juce::Justification::centred);
