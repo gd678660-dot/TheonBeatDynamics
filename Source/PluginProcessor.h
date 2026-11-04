@@ -16,8 +16,7 @@ public:
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override { return true; }
 
-    const juce::String getName() const override { return "TheonBeat Dynamics"; }
-    bool acceptsMidi() const override { return false; }
+    const jugetName() const override { return "TheonBeat Dynamics"; } }
     bool producesMidi() const override { return false; }
     double getTailLengthSeconds() const override { return 0.0; }
 
@@ -25,32 +24,25 @@ public:
     int getCurrentProgram() override { return 0; }
     void setCurrentProgram (int) override {}
     const juce::String getProgramName (int) override { return {}; }
-    void changeProgramName (int, const juce::String&) override {}
+    void changeProgramName (int, const juoverride {}    void setStateInformation (const void* data, int sizeInBytes) override;
 
-    void getStateInformation (juce::MemoryBlock& destData) override;
-    void setStateInformation (const void* data, int sizeInBytes) override;
-
-    // Métodos para el detector de escala y el botón de voz
     void detectScaleFromBeat();
     void calibrateVocalPreset();
 
-    // Sistema de gestión de parámetros
     juce::AudioProcessorValueTreeState apvts;
 
-private:
-    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
-    // Filtros de la cadena vocal (Paso alto y brillo Air)
-    juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>> highPassFilter;
-    juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>> airShelfFilter;
-    juce::dsp::Compressor<float> compressor;
+    // Filtros estándar de JUCE (sin necesidad del módulo juce_dsp)
+    juce::IIRFilter highPassL, highPassR;
+    juce::IIRFilter airShelfL, airShelfR;
 
-    // Buffer circular para AutoTune (Pitch Shifter de retardo variable)
+    // Buffer circular para AutoTune
     juce::AudioBuffer<float> pitchBuffer;
     int writePosition { 0 };
     float readPhase { 0.0f };
 
-    // Detección de escala (Chromagram de 12 notas)
+    // Detección de escala (12 notas)
     float chromaEnergy[12] = { 0.0f };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TheonBeatDynamicsAudioProcessor)
