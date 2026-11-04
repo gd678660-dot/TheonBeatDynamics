@@ -1,58 +1,45 @@
 #pragma once
 #include <JuceHeader.h>
 
-class TheonBeatDynamicsAudioProcessor;
+class TheonBeatDynamicsAudiojuce::AudioProcessoronBeatDynamicsAudioProcessor() override;
 
-struct StudioKnobLookAndFeel : public juce::LookAndFeel_V4
-{
-    juce::Colour accentColour { 0xff00d4ff };
+    void prepareToPlay (double sampleRate, int samplesPerBlock) override;
+    void releaseResources() override;
+    void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
-    void drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height,
-                           float sliderPos, float rotaryStartAngle, float rotaryEndAngle,
-                           juce::Slider&) override
-    {
-        auto bounds = juce::Rectangle<int> (x, y, width, height).toFloat().reduced (4);
-        auto radius = juce::jmin (bounds.getWidth(), bounds.getHeight()) / 2.0f;
-        auto center = bounds.getCentre();
+    juce::AudioProcessorEditor* createEditor() override;
+    bool hasEditor() const override { return true; }
 
-        g.setColour (juce::Colour (0xff14171d));
-        g.fillEllipse (bounds);
-        g.setColour (juce::Colour (0xff282d37));
-        g.drawEllipse (bounds, 1.5f);
+    const juce::String getName() const override { return "TheonBeat Dynamics"; }
+    bool acceptsMidi() const override { return false; }
+    bool producesMidi() const override { return false; }
+    bool isMidiEffect() const override { return false; }
+    double getTailLengthSeconds() const override { return 0.0; }
 
-        juce::Path arc;
-        arc.addCentredArc (center.x, center.y, radius - 2.5f, radius - 2.5f, 0.0f,
-                           rotaryStartAngle, rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle), true);
-        g.setColour (accentColour);
-        g.strokePath (arc, juce::PathStrokeType (3.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+    int getNumPrograms() override { return 1; }
+    int getCurrentProgram() override { return 0; }
+    void setCurrentProgram (int) override {}
+    const juce::String getProgramName (int) override { return {}; }
+    void changeProgramName (int, const juce::String&) override {}
 
-        auto angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
-        auto thumbLength = radius * 0.60f;
-        g.setColour (juce::Colours::white);
-        g.drawLine (center.x, center.y,
-                    center.x + thumbLength * std::sin (angle),
-                    center.y - thumbLength * std::cos (angle), 2.5f);
-    }
-};
+    void getStateInformation (destData) override;InBytes) override;
 
-class TheonBeatDynamicsAudioProcessorEditor : public juce::AudioProcessorEditor, private juce::Timer
-{
-public:
-    explicit TheonBeatDynamicsAudioProcessorEditor (TheonBeatDynamicsAudioProcessor&);
-    ~TheonBeatDynamicsAudioProcessorEditor() override;
-
-    void paint (juce::Graphics&) override;
-    void resized() override;
-    void timerCallback() override;
-    void mouseUp (const juce::MouseEvent& e) override;
+    // Métricas para los vúmetros
+    std::atomic<float> meterInL { 0.0f };
+    std::atomic<float> meterOutL { 0.0f };
+    meterGR { 0.0f };ce::AudioParameterFloat* paramInputGain = nullptr;
+    juce::AudioParameterFloat* paramThreshold = nullptr;
+    juce::AudioParameterFloat* paramRatio = nullptr;
+    juce::AudioParameterFloat* paramAttack = nullptr;
+    juce::AudioParameterFloat* paramRelease = nullptr;
+    juce::AudioParameterFloat* paramMakeup = nullptr;
+    juce::AudioParameterFloat* paramMix = nullptr;
+    juce::AudioParameterFloat* paramDrive = nullptr;
+    juce::AudioParameterBool*  paramClipperOn = nullptr;
+    juce::AudioParameterFloat* paramCeiling = nullptr;
+    juce::AudioParameterBool*  paramBypass = nullptr;
 
 private:
-    TheonBeatDynamicsAudioProcessor& processorRef;
-    StudioKnobLookAndFeel knobLaf, orangeLaf;
-
-    juce::Slider inGainKnob, threshKnob, ratioKnob, attackKnob, releaseKnob;
-    juce::Slider makeupKnob, mixKnob, driveKnob, ceilingKnob;
-    juce::ToggleButton clipperBtn { "CLIPPER ON" }, bypassBtn { "BYPASS" };
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TheonBeatDynamicsAudioProcessorEditor)
+    double currentSampleRate = 44100.0;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TheonBeatDynamicsAudioProcessor)
 };
