@@ -85,8 +85,24 @@ TheonBeatDynamicsAudioProcessorEditor::~TheonBeatDynamicsAudioProcessorEditor()
     ceilingKnob.setLookAndFeel (nullptr);
 }
 
+void TheonBeatDynamicsAudioProcessorEditor::mouseUp (const juce::MouseEvent& e)
+{
+    auto learnBtnBounds = juce::Rectangle<int> (290, 408, 140, 38);
+    if (learnBtnBounds.contains (e.getPosition()))
+    {
+        processorRef.startVocalLearn();
+    }
+}
+
 void TheonBeatDynamicsAudioProcessorEditor::timerCallback()
 {
+    if (!processorRef.isLearning.load())
+    {
+        if (threshKnob.getValue() != processorRef.paramThreshold->get())
+            threshKnob.setValue (processorRef.paramThreshold->get(), juce::dontSendNotification);
+        if (makeupKnob.getValue() != processorRef.paramMakeup->get())
+            makeupKnob.setValue (processorRef.paramMakeup->get(), juce::dontSendNotification);
+    }
     repaint();
 }
 
@@ -140,46 +156,38 @@ void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
     drawLedBar (95, 370, 520, 14, processorRef.meterOutL.load(), juce::Colour (0xff00e676));
 
     g.setColour (juce::Colour (0xff171a22));
-    g.fillRect (100, 400, 240, 95);
-    g.fillRect (370, 400, 320, 95);
+    g.fillRect (60, 400, 220, 95);
+    g.fillRect (440, 400, 260, 95);
     g.setColour (juce::Colour (0xff2f3542));
-    g.drawRect (100, 400, 240, 95);
-    g.drawRect (370, 400, 320, 95);
+    g.drawRect (60, 400, 220, 95);
+    g.drawRect (440, 400, 260, 95);
 
     g.setColour (juce::Colours::cyan);
-    g.drawLine (100.0f, 495.0f, 230.0f, 440.0f, 2.0f);
-    g.drawLine (230.0f, 440.0f, 340.0f, 420.0f, 2.0f);
+    g.drawLine (60.0f, 495.0f, 170.0f, 440.0f, 2.0f);
+    g.drawLine (170.0f, 440.0f, 280.0f, 420.0f, 2.0f);
 
     juce::Path rtaPath;
-    rtaPath.startNewSubPath (370.0f, 495.0f);
-    rtaPath.lineTo (410.0f, 470.0f);
-    rtaPath.lineTo (450.0f, 430.0f);
-    rtaPath.lineTo (500.0f, 450.0f);
-    rtaPath.lineTo (560.0f, 420.0f);
-    rtaPath.lineTo (620.0f, 460.0f);
-    rtaPath.lineTo (690.0f, 495.0f);
+    rtaPath.startNewSubPath (440.0f, 495.0f);
+    rtaPath.lineTo (480.0f, 470.0f);
+    rtaPath.lineTo (520.0f, 430.0f);
+    rtaPath.lineTo (560.0f, 450.0f);
+    rtaPath.lineTo (610.0f, 420.0f);
+    rtaPath.lineTo (660.0f, 460.0f);
+    rtaPath.lineTo (700.0f, 495.0f);
     g.setColour (juce::Colour (0xffff7700));
     g.strokePath (rtaPath, juce::PathStrokeType (2.0f));
 
-    g.setColour (juce::Colour (0xff00d4ff));
-    g.drawText ("TheonBeat", getWidth() / 2 - 50, getHeight() - 25, 100, 20, juce::Justification::centred);
-}
-
-void TheonBeatDynamicsAudioProcessorEditor::resized()
-{
-    inGainKnob.setBounds (35, 85, 95, 95);
-
-    threshKnob.setBounds (190, 85, 120, 120);
-    ratioKnob.setBounds (330, 85, 85, 85);
-    attackKnob.setBounds (440, 85, 85, 85);
-    releaseKnob.setBounds (550, 85, 85, 85);
-
-    makeupKnob.setBounds (795, 75, 85, 85);
-    mixKnob.setBounds (795, 175, 85, 85);
-
-    driveKnob.setBounds (795, 315, 80, 80);
-    clipperBtn.setBounds (780, 400, 110, 28);
-    ceilingKnob.setBounds (795, 430, 80, 80);
-
-    bypassBtn.setBounds (20, getHeight() - 30, 90, 24);
-}
+    bool isLearning = processorRef.isLearning.load();
+    auto learnBtnBounds = juce::Rectangle<int> (290, 408, 140, 38);
+    g.setColour (isLearning ? juce::Colour (0xffff3d00) : juce::Colour (0xff00d4ff));
+    g.fillRoundedRectangle (learnBtnBounds.toFloat(), 5.0f);
+    g.setColour (juce::Colours::black);
+    g.setFont (juce::FontOptions (11.0f, juce::Font::bold));
+    if (isLearning)
+    {
+        int pct = static_cast<int> (processorRef.learnProgress.load() * 100.0f);
+        g.drawText ("LISTENING " + juce::String (pct) + "%", learnBtnBounds, juce::Justification::centred);
+    }
+    else
+    {
+        g.drawText ("LISTEN VOICE (15s)", learnBtnBounds, juce::Just
