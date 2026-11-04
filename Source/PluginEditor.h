@@ -4,7 +4,8 @@
 #include "PluginProcessor.h"
 
 class TheonBeatDynamicsAudioProcessorEditor  : public juce::AudioProcessorEditor,
-                                              public ju{
+                                              public juce::Timer
+{
 public:
     explicit TheonBeatDynamicsAudioProcessorEditor (TheonBeatDynamicsAudioProcessor&);
     ~TheonBeatDynamicsAudioProcessorEditor() override;
