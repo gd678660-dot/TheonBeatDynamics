@@ -16,7 +16,8 @@ public:
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override { return true; }
 
-    const jugetName() const override { return "TheonBeat Dynamics"; } }
+    const juce::String getName() const override { return "TheonBeat Dynamics"; }
+    bool acceptsMidi() const override { return false; }
     bool producesMidi() const override { return false; }
     double getTailLengthSeconds() const override { return 0.0; }
 
@@ -29,20 +30,19 @@ public:
     void detectScaleFromBeat();
     void calibrateVocalPreset();
 
-    juce::AudioProcessorValueTreeState apvts;
+    // Puntero limpio que no causa error C2512 en el header
+    std::unique_ptr<juce::AudioProcessorValueTreeState> apvts;
 
-juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+private:
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
-    // Filtros estándar de JUCE (sin necesidad del módulo juce_dsp)
     juce::IIRFilter highPassL, highPassR;
     juce::IIRFilter airShelfL, airShelfR;
 
-    // Buffer circular para AutoTune
     juce::AudioBuffer<float> pitchBuffer;
     int writePosition { 0 };
     float readPhase { 0.0f };
 
-    // Detección de escala (12 notas)
     float chromaEnergy[12] = { 0.0f };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TheonBeatDynamicsAudioProcessor)
