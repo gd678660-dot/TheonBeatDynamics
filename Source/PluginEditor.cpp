@@ -6,23 +6,9 @@ TheonBeatDynamicsAudioProcessorEditor::TheonBeatDynamicsAudioProcessorEditor (Th
 {
     setSize (800, 600);
 
+    voiceAiButton.setButtonText ("15S VOICE PRESET");
     addAndMakeVisible (voiceAiButton);
-    voiceAiButton.addListener (this);
-
-    addAndMakeVisible (detectScaleButton);
-    detectScaleButton.addListener (this);
-}
-
-TheonBeatDynamicsAudioProcessorEditor::~TheonBeatDynamicsAudioProcessorEditor()
-{
-    voiceAiButton.removeListener (this);
-    detectScaleButton.removeListener (this);
-    stopTimer();
-}
-
-void TheonBeatDynamicsAudioProcessorEditor::buttonClicked (juce::Button* button)
-{
-    if (button == &voiceAiButton)
+    voiceAiButton.onClick = [this]
     {
         if (!isListeningVoice)
         {
@@ -30,11 +16,19 @@ void TheonBeatDynamicsAudioProcessorEditor::buttonClicked (juce::Button* button)
             listenSeconds = 15;
             startTimer (1000);
         }
-    }
-    else if (button == &detectScaleButton)
+    };
+
+    detectScaleButton.setButtonText ("DETECTAR ESCALA");
+    addAndMakeVisible (detectScaleButton);
+    detectScaleButton.onClick = [this]
     {
         audioProcessor.detectScaleFromBeat();
-    }
+    };
+}
+
+TheonBeatDynamicsAudioProcessorEditor::~TheonBeatDynamicsAudioProcessorEditor()
+{
+    stopTimer();
 }
 
 void TheonBeatDynamicsAudioProcessorEditor::timerCallback()
@@ -67,8 +61,7 @@ void TheonBeatDynamicsAudioProcessorEditor::paint (juce::Graphics& g)
     g.drawText ("v1.1.0 (VST3)", 260, 18, 90, 20, juce::Justification::left);
 }
 
-void TheonBeatDynamicsAudioProcessorEditor::resized()
-{
+void TheonBeatDynamics{
     voiceAiButton.setBounds (440, 48, 140, 26);
     detectScaleButton.setBounds (590, 48, 130, 26);
-}
+    }
