@@ -1,8 +1,10 @@
 #pragma once
 #include <JuceHeader.h>
-#include "PluginProcessor.h"
 
-struct StudioKnobLookAndFeel : public juce::LookAndFeel_V4 {
+class TheonBeatDynamicsAudioProcessor;
+
+struct StudioKnobLookAndFeel : public juce::LookAndFeel_V4
+{
     juce::Colour accentColour { 0xff00d4ff };
 
     void drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height,
@@ -33,8 +35,7 @@ struct StudioKnobLookAndFeel : public juce::LookAndFeel_V4 {
     }
 };
 
-class TheonBeatDynamicsAudioProcessorEditor : public juce::AudioProcessorEditor,
-                                              private juce::Timer
+class TheonBeatDynamicsAudioProcessorEditor : public juce::AudioProcessorEditor, private juce::Timer
 {
 public:
     explicit TheonBeatDynamicsAudioProcessorEditor (TheonBeatDynamicsAudioProcessor&);
@@ -43,6 +44,7 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
     void timerCallback() override;
+    void mouseUp (const juce::MouseEvent& e) override;
 
 private:
     TheonBeatDynamicsAudioProcessor& processorRef;
