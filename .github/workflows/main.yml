@@ -1,4 +1,8 @@
- VST3 Windows ]
+name: Build VST3 Windows
+
+on:
+  push:
+    branches: [ "main", "master" ]
   workflow_dispatch:
 
 jobs:
@@ -6,10 +10,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      -repository
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
