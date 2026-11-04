@@ -1,7 +1,6 @@
-name: Build VST3 Windows
+here    name: Build VST3 Windows
 
-on:
-  push:
+push:
     branches: [ "main", "master" ]
   workflow_dispatch:
 
@@ -22,7 +21,7 @@ jobs:
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build VST3 Plugin
-        run: cmake --build build --config Release --target all
+        run: cmake --build build --config Release
 
       - name: Upload VST3 Artifact
         uses: actions/upload-artifact@v4
