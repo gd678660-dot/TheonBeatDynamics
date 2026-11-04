@@ -1,7 +1,8 @@
 #pragma once
 #include <JuceHeader.h>
 
-class TheonBeatDynamicsAudioProcessor  : public ju{
+class TheonBeatDynamicsAudioProcessor : public juce::AudioProcessor
+{
 public:
     TheonBeatDynamicsAudioProcessor();
     ~TheonBeatDynamicsAudioProcessor() override;
@@ -12,24 +13,34 @@ public:
 
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override;
+
     const juce::String getName() const override;
+
     bool acceptsMidi() const override;
     bool producesMidi() const override;
+    bool isMidiEffect() const override;
     double getTailLengthSeconds() const override;
+
     int getNumPrograms() override;
     int getCurrentProgram() override;
     void setCurrentProgram (int index) override;
-    constgetProgramName (int index) override;newName) override;void setStateInformation (const void* data, int sizeInBytes) override;
+    const juce::String getProgramName (int index) override;
+    void changeProgramName (int index, const juce::String& newName) override;
+
+    void getStateInformation (juce::MemoryBlock& destData) override;
+    void setStateInformation (const void* data, int sizeInBytes) override;
 
 private:
-    juce::AudioParameterFloat* paramThreshold;
-    juce::AudioParameterFloat* paramRatio;
-    juce::AudioParameterFloat* paramAttack;
-    juce::AudioParameterFloat* paramRelease;
-    juce::AudioParameterFloat* paramRetuneSpeed;
-    juce::AudioParameterFloat* paramHumanize;
-    juce::AudioParameterFloat* paramDeEsser;
-    juce::AudioParameterFloat* paramMakeup;
+    juce::AudioParameterFloat* paramThreshold = nullptr;
+    juce::AudioParameterFloat* paramRatio = nullptr;
+    juce::AudioParameterFloat* paramAttack = nullptr;
+    juce::AudioParameterFloat* paramRelease = nullptr;
+    juce::AudioParameterFloat* paramRetuneSpeed = nullptr;
+    juce::AudioParameterFloat* paramHumanize = nullptr;
+    juce::AudioParameterFloat* paramDeEsser = nullptr;
+    juce::AudioParameterFloat* paramMakeup = nullptr;
 
     double currentSampleRate = 44100.0;
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TheonBeatDynamicsAudioProcessor)
+};
